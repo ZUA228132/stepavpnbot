@@ -21,8 +21,11 @@ CORS(app)
 # Пароль для админки
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'Artem1522@')
 
-# Иконка для HAPP (base64 PNG или URL)
-HAPP_ICON_URL = "https://i.imgur.com/7QjKsCY.png"  # Молния ⚡
+# Настройки для HAPP
+# Иконка — используем публичный URL с молнией/щитом
+HAPP_ICON_URL = "https://raw.githubusercontent.com/nicepkg/vscode-iconify/main/icons/noto/high-voltage.svg"
+TELEGRAM_BOT = "@stepavpnbot"
+SUPPORT_URL = "https://t.me/stepavpnbot"
 
 CONFIG_FILE = 'server_config.json'
 CLIENTS_FILE = 'clients.json'
@@ -213,7 +216,7 @@ def toggle_client(client_id):
 
 @app.route('/api/sub/<sub_code>')
 def get_subscription(sub_code):
-    """Генерация подписки для HAPP по коду"""
+    """Генерация подписки для HAPP по коду — расширенный формат"""
     client = get_client_by_code(sub_code)
     
     if not client:
@@ -222,8 +225,42 @@ def get_subscription(sub_code):
     server_config = load_server_config()
     vless_link = create_vless_link(client, server_config)
     
-    # Кодируем в base64 для подписки
-    subscription = base64.b64encode(vless_link.encode()).decode()
+    # Расширенный формат подписки для HAPP с метаданными
+    traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "∞"
+    days_left = ""
+    if client.get('expiry_date'):
+        try:
+            from datetime import datetime
+            exp = datetime.fromisoformat(client['expiry_date'])
+            days = (exp - datetime.now()).days
+            days_left = f"Дней осталось: {days}" if days > 0 else "Истекла"
+        except:
+            days_left = ""
+    
+    # Формируем описание
+    description_lines = [
+        f"🔗 Подписка: {sub_code}",
+        f"📊 Статус: {'✅ Active' if client['enabled'] else '❌ Disabled'}",
+    ]
+    if days_left:
+        description_lines.append(f"📅 {days_left}")
+    description_lines.append(f"🛡️ Reality Protocol")
+    
+    # Динамический URL иконки
+    icon_url = f"{request.host_url}api/icon.png"
+    
+    subscription_info = {
+        "name": "STEPAN VPN",
+        "icon": icon_url,
+        "description": "\n".join(description_lines),
+        "support": SUPPORT_URL,
+        "servers": [vless_link]
+    }
+    
+    # HAPP принимает base64 encoded JSON или просто base64 VLESS
+    # Пробуем JSON формат
+    sub_json = json.dumps(subscription_info, ensure_ascii=False)
+    subscription = base64.b64encode(sub_json.encode()).decode()
     
     return subscription, 200, {'Content-Type': 'text/plain'}
 
@@ -262,6 +299,41 @@ def get_vless_link(sub_code):
     vless_link = create_vless_link(client, server_config)
     
     return vless_link, 200, {'Content-Type': 'text/plain'}
+
+@app.route('/api/icon.png')
+def get_icon():
+    """Иконка STEPAN VPN для HAPP — молния на фиолетовом фоне"""
+    from PIL import Image, ImageDraw
+    
+    # Создаём 512x512 иконку
+    size = 512
+    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    
+    # Фиолетовый градиентный фон (упрощённо — сплошной)
+    # Рисуем скруглённый квадрат
+    radius = 100
+    draw.rounded_rectangle([0, 0, size-1, size-1], radius=radius, fill=(168, 85, 247, 255))
+    
+    # Рисуем молнию (⚡) — упрощённая форма
+    bolt_color = (255, 255, 255, 255)
+    # Координаты молнии
+    bolt_points = [
+        (280, 80),   # верх
+        (180, 240),  # левый угол верхней части
+        (240, 240),  # внутренний угол
+        (160, 432),  # низ
+        (320, 260),  # правый угол нижней части
+        (260, 260),  # внутренний угол
+        (340, 80),   # обратно к верху
+    ]
+    draw.polygon(bolt_points, fill=bolt_color)
+    
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    
+    return send_file(buf, mimetype='image/png')
 
 @app.route('/api/config/generate', methods=['POST'])
 @login_required

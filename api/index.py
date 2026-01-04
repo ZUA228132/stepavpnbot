@@ -17,7 +17,11 @@ app.secret_key = os.environ.get('SECRET_KEY', 'stepan-vpn-secret-key-2024')
 CORS(app)
 
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'Artem1522@')
+
+# Настройки для HAPP
 HAPP_ICON_URL = "https://i.imgur.com/7QjKsCY.png"
+TELEGRAM_BOT = "@stepavpnbot"
+SUPPORT_URL = "https://t.me/stepavpnbot"
 
 CONFIG_FILE = '/tmp/server_config.json'
 CLIENTS_FILE = '/tmp/clients.json'
@@ -189,6 +193,7 @@ def toggle_client(client_id):
 
 @app.route('/api/sub/<sub_code>')
 def get_subscription(sub_code):
+    """Генерация подписки для HAPP — расширенный формат с иконкой и описанием"""
     client = get_client_by_code(sub_code)
     
     if not client:
@@ -196,7 +201,39 @@ def get_subscription(sub_code):
     
     server_config = load_server_config()
     vless_link = create_vless_link(client, server_config)
-    subscription = base64.b64encode(vless_link.encode()).decode()
+    
+    # Расширенный формат подписки для HAPP
+    traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "∞"
+    days_left = ""
+    if client.get('expiry_date'):
+        try:
+            exp = datetime.fromisoformat(client['expiry_date'])
+            days = (exp - datetime.now()).days
+            days_left = f"Дней осталось: {days}" if days > 0 else "Истекла"
+        except:
+            days_left = ""
+    
+    description_lines = [
+        f"🔗 Подписка: {sub_code}",
+        f"📊 Статус: {'✅ Active' if client['enabled'] else '❌ Disabled'}",
+    ]
+    if days_left:
+        description_lines.append(f"📅 {days_left}")
+    description_lines.append(f"🛡️ Reality Protocol")
+    
+    # Динамический URL иконки
+    icon_url = f"{request.host_url}api/icon.png"
+    
+    subscription_info = {
+        "name": "STEPAN VPN",
+        "icon": icon_url,
+        "description": "\n".join(description_lines),
+        "support": SUPPORT_URL,
+        "servers": [vless_link]
+    }
+    
+    sub_json = json.dumps(subscription_info, ensure_ascii=False)
+    subscription = base64.b64encode(sub_json.encode()).decode()
     
     return subscription, 200, {'Content-Type': 'text/plain'}
 
@@ -233,6 +270,33 @@ def get_vless_link(sub_code):
     vless_link = create_vless_link(client, server_config)
     
     return vless_link, 200, {'Content-Type': 'text/plain'}
+
+@app.route('/api/icon.png')
+def get_icon():
+    """Иконка STEPAN VPN для HAPP"""
+    from PIL import Image, ImageDraw
+    
+    size = 512
+    img = Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    draw = ImageDraw.Draw(img)
+    
+    # Фиолетовый фон со скруглёнными углами
+    radius = 100
+    draw.rounded_rectangle([0, 0, size-1, size-1], radius=radius, fill=(168, 85, 247, 255))
+    
+    # Молния
+    bolt_color = (255, 255, 255, 255)
+    bolt_points = [
+        (280, 80), (180, 240), (240, 240), (160, 432),
+        (320, 260), (260, 260), (340, 80),
+    ]
+    draw.polygon(bolt_points, fill=bolt_color)
+    
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    
+    return send_file(buf, mimetype='image/png')
 
 @app.route('/api/masquerade-sites')
 @login_required
