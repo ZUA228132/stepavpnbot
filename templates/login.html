@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+    <meta name="theme-color" content="#050505">
+    <title>⚡ STEPAN VPN - Вход</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--primary:#a855f7;--primary-dark:#7c3aed;--bg:#050505;--card:rgba(20,20,25,0.9);--border:rgba(168,85,247,0.12);--text:#fafafa;--muted:#71717a;--danger:#ef4444}
+        body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;min-height:100dvh;color:var(--text);display:flex;align-items:center;justify-content:center;padding:20px}
+        .bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+        .bg::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg at 50% 50%,transparent,rgba(168,85,247,0.03) 60deg,transparent 120deg);animation:rotate 60s linear infinite}
+        @keyframes rotate{to{transform:rotate(360deg)}}
+        .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.4}
+        .orb-1{width:400px;height:400px;background:var(--primary);top:-150px;left:-100px}
+        .orb-2{width:300px;height:300px;background:#06b6d4;bottom:-100px;right:-80px}
+        .login-box{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:24px;padding:40px 32px;max-width:400px;width:100%;text-align:center}
+        .logo{width:70px;height:70px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:35px;margin:0 auto 20px;box-shadow:0 0 50px rgba(168,85,247,0.4)}
+        .title{font-size:2em;font-weight:900;background:linear-gradient(135deg,#fff,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
+        .subtitle{color:var(--muted);font-size:0.9em;margin-bottom:30px}
+        .form-group{margin-bottom:20px;text-align:left}
+        .form-label{display:block;font-size:0.85em;font-weight:600;margin-bottom:8px}
+        .form-input{width:100%;padding:14px 18px;background:rgba(168,85,247,0.05);border:2px solid var(--border);border-radius:14px;color:var(--text);font-size:1em;font-family:inherit;transition:all 0.3s}
+        .form-input::placeholder{color:var(--muted)}
+        .form-input:focus{outline:none;border-color:var(--primary);background:rgba(168,85,247,0.1);box-shadow:0 0 20px rgba(168,85,247,0.15)}
+        .btn{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;border-radius:14px;font-size:1em;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;text-transform:uppercase;letter-spacing:0.5px}
+        .btn:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(168,85,247,0.4)}
+        .error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171;padding:12px;border-radius:10px;margin-bottom:20px;font-size:0.9em}
+    </style>
+</head>
+<body>
+    <div class="bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+    <div class="login-box">
+        <div class="logo">⚡</div>
+        <h1 class="title">STEPAN VPN</h1>
+        <p class="subtitle">Вход в админ-панель</p>
+        {% if error %}
+        <div class="error">❌ Неверный пароль</div>
+        {% endif %}
+        <form method="POST">
+            <div class="form-group">
+                <label class="form-label">Пароль</label>
+                <input type="password" name="password" class="form-input" placeholder="Введите пароль" required autofocus>
+            </div>
+            <button type="submit" class="btn">🔐 Войти</button>
+        </form>
+    </div>
+</body>
+</html>

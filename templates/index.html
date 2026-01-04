@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>⚡ STEPAN VPN - Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --primary:#a855f7;--primary-light:#c084fc;--primary-dark:#7c3aed;
+            --secondary:#06b6d4;--accent:#f59e0b;--success:#22c55e;--danger:#ef4444;
+            --bg:#050505;--card:rgba(20,20,25,0.9);--border:rgba(168,85,247,0.12);
+            --border-hover:rgba(168,85,247,0.4);--text:#fafafa;--text-muted:#71717a;
+        }
+        body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;color:var(--text);overflow-x:hidden}
+        
+        /* EPIC BACKGROUND */
+        .bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+        .bg::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;
+            background:conic-gradient(from 0deg at 50% 50%,transparent 0deg,rgba(168,85,247,0.03) 60deg,transparent 120deg);
+            animation:rotate 60s linear infinite}
+        @keyframes rotate{to{transform:rotate(360deg)}}
+        .glow{position:absolute;border-radius:50%;filter:blur(100px);opacity:0.4}
+        .glow-1{width:600px;height:600px;background:var(--primary);top:-200px;left:-200px;animation:float1 20s ease-in-out infinite}
+        .glow-2{width:400px;height:400px;background:var(--secondary);bottom:-100px;right:-100px;animation:float2 25s ease-in-out infinite}
+        .glow-3{width:300px;height:300px;background:var(--accent);top:50%;left:50%;transform:translate(-50%,-50%);animation:float3 15s ease-in-out infinite}
+        @keyframes float1{0%,100%{transform:translate(0,0)}50%{transform:translate(50px,50px)}}
+        @keyframes float2{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,-30px)}}
+        @keyframes float3{0%,100%{transform:translate(-50%,-50%) scale(1)}50%{transform:translate(-50%,-50%) scale(1.2)}}
+        .grid{position:absolute;inset:0;background-image:linear-gradient(rgba(168,85,247,0.02) 1px,transparent 1px),linear-gradient(90deg,rgba(168,85,247,0.02) 1px,transparent 1px);background-size:80px 80px}
+        
+        .container{max-width:1100px;margin:0 auto;padding:25px 16px;padding-top:max(25px, env(safe-area-inset-top));position:relative;z-index:1}
+        @media(max-width:768px){.container{padding:12px 10px;padding-top:max(12px, env(safe-area-inset-top))}}
+
+        /* HEADER */
+        .header{text-align:center;padding:35px 0 30px}
+        .logo-wrap{position:relative;display:inline-block;margin-bottom:14px}
+        .logo-pulse{position:absolute;inset:-20px;border:2px solid var(--primary);border-radius:50%;opacity:0;animation:pulse 3s ease-out infinite}
+        .logo-pulse:nth-child(2){animation-delay:1s}
+        .logo-pulse:nth-child(3){animation-delay:2s}
+        @keyframes pulse{0%{transform:scale(0.8);opacity:0.8}100%{transform:scale(1.5);opacity:0}}
+        .logo{position:relative;width:75px;height:75px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:22px;display:flex;align-items:center;justify-content:center;font-size:38px;box-shadow:0 0 60px rgba(168,85,247,0.5),inset 0 1px 0 rgba(255,255,255,0.2)}
+        .title{font-size:2.6em;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#fff,var(--primary-light));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .subtitle{color:var(--text-muted);font-size:0.9em;letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+        @media(max-width:768px){.header{padding:20px 0}.logo{width:60px;height:60px;font-size:30px;border-radius:18px}.title{font-size:2em}.subtitle{font-size:0.75em;letter-spacing:2px}}
+
+        /* STATS */
+        .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+        .stat{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 14px;text-align:center;transition:all 0.3s;position:relative;overflow:hidden}
+        .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--primary),var(--secondary));opacity:0;transition:opacity 0.3s}
+        .stat:hover{border-color:var(--border-hover);transform:translateY(-3px)}.stat:hover::before{opacity:1}
+        .stat-icon{font-size:1.6em;margin-bottom:8px}
+        .stat-val{font-size:2em;font-weight:800;background:linear-gradient(135deg,#fff,var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-label{font-size:0.7em;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:4px}
+        @media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr);gap:10px}.stat{padding:16px 10px;border-radius:14px}.stat-icon{font-size:1.3em}.stat-val{font-size:1.5em}.stat-label{font-size:0.6em}}
+
+        /* CARDS */
+        .card{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:22px;padding:26px;margin-bottom:18px;transition:all 0.3s}
+        .card:hover{border-color:var(--border-hover)}
+        @media(max-width:768px){.card{padding:18px 14px;border-radius:18px;margin-bottom:14px}}
+        .card-head{display:flex;align-items:center;gap:12px;margin-bottom:22px}
+        .card-ico{width:46px;height:46px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 8px 25px rgba(168,85,247,0.3)}
+        .card-title{font-size:1.2em;font-weight:700}
+        @media(max-width:768px){.card-head{margin-bottom:18px;gap:10px}.card-ico{width:40px;height:40px;font-size:18px}.card-title{font-size:1.1em}}
+
+        /* FORMS */
+        .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+        @media(max-width:768px){.form-grid{grid-template-columns:1fr;gap:12px}}
+        .form-group{margin-bottom:0}
+        .form-label{display:block;font-size:0.8em;font-weight:600;color:var(--text);margin-bottom:7px}
+        .form-input,.form-select{width:100%;padding:13px 16px;background:rgba(168,85,247,0.04);border:1.5px solid var(--border);border-radius:12px;color:var(--text);font-size:0.95em;font-family:inherit;transition:all 0.3s;appearance:none}
+        .form-input::placeholder{color:var(--text-muted)}
+        .form-input:focus,.form-select:focus{outline:none;border-color:var(--primary);background:rgba(168,85,247,0.08);box-shadow:0 0 20px rgba(168,85,247,0.15)}
+        .form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23a855f7' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;cursor:pointer}
+        .form-select option{background:var(--bg);color:var(--text)}
+        @media(max-width:768px){.form-input,.form-select{padding:11px 14px;font-size:0.9em}}
+
+        /* BUTTONS */
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 26px;font-size:0.95em;font-weight:700;font-family:inherit;border:none;border-radius:12px;cursor:pointer;transition:all 0.3s;text-transform:uppercase;letter-spacing:0.5px;position:relative;overflow:hidden}
+        .btn::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);transition:left 0.5s}
+        .btn:hover::after{left:100%}
+        .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;box-shadow:0 10px 30px rgba(168,85,247,0.3)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(168,85,247,0.4)}
+        .btn-success{background:linear-gradient(135deg,var(--success),#16a34a);color:#fff;box-shadow:0 10px 30px rgba(34,197,94,0.3)}
+        .btn-success:hover{transform:translateY(-2px);box-shadow:0 15px 40px rgba(34,197,94,0.4)}
+        .btn-full{width:100%;margin-top:18px}
+        .btn-loading{opacity:0.7;pointer-events:none}
+        @media(max-width:768px){.btn{padding:12px 20px;font-size:0.85em}.btn-full{margin-top:14px}}
+
+        /* CLIENTS */
+        .clients{display:flex;flex-direction:column;gap:10px}
+        .client{background:rgba(168,85,247,0.03);border:1px solid var(--border);border-radius:16px;padding:16px;display:flex;justify-content:space-between;align-items:center;gap:14px;transition:all 0.3s}
+        .client:hover{background:rgba(168,85,247,0.07);border-color:var(--border-hover);transform:translateX(4px)}
+        .client-info{flex:1;min-width:0}
+        .client-name{font-size:1em;font-weight:700;margin-bottom:5px;display:flex;align-items:center;gap:8px}
+        .dot{width:9px;height:9px;background:var(--success);border-radius:50%;box-shadow:0 0 10px var(--success);animation:blink 2s infinite}
+        .dot.off{background:var(--danger);box-shadow:0 0 10px var(--danger)}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+        .client-uuid{font-size:0.75em;color:var(--text-muted);font-family:monospace;background:rgba(168,85,247,0.08);padding:3px 8px;border-radius:5px;display:inline-block}
+        .client-btns{display:flex;gap:6px;flex-wrap:wrap}
+        .btn-sm{padding:9px 12px;font-size:0.75em;font-weight:700;border:none;border-radius:9px;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:4px}
+        .btn-sm:hover{transform:scale(1.05)}
+        .btn-sub{background:linear-gradient(135deg,var(--success),#16a34a);color:#fff}
+        .btn-qr{background:linear-gradient(135deg,var(--secondary),#0891b2);color:#fff}
+        .btn-toggle{background:linear-gradient(135deg,var(--accent),#d97706);color:#fff}
+        .btn-del{background:linear-gradient(135deg,var(--danger),#dc2626);color:#fff}
+        @media(max-width:768px){.client{flex-direction:column;align-items:stretch;padding:14px}.client-info{margin-bottom:10px}.client-name{font-size:0.9em}.client-uuid{font-size:0.65em}.client-btns{justify-content:space-between}.btn-sm{flex:1;justify-content:center;padding:10px 8px;font-size:0.7em}}
+
+        /* ALERTS & MODAL */
+        .alert{padding:14px 18px;border-radius:12px;margin-top:16px;display:none;animation:slideIn 0.3s}
+        @keyframes slideIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+        .alert.show{display:block}
+        .alert.loading{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);color:#fbbf24}
+        .alert.success{background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);color:#4ade80}
+        .alert.error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:#f87171}
+        .alert code{background:rgba(0,0,0,0.3);padding:2px 6px;border-radius:4px;font-family:monospace;font-size:0.8em}
+        .modal{display:none;position:fixed;inset:0;background:rgba(5,5,5,0.95);backdrop-filter:blur(10px);z-index:1000;justify-content:center;align-items:center;padding:20px}
+        .modal.show{display:flex}
+        .modal-box{background:var(--card);border:1px solid var(--border);border-radius:22px;padding:30px;max-width:380px;width:100%;text-align:center;animation:modalIn 0.3s}
+        @keyframes modalIn{from{opacity:0;transform:scale(0.95)}to{opacity:1;transform:scale(1)}}
+        .modal-box img{width:180px;height:180px;border-radius:14px;border:3px solid var(--primary);margin:18px auto;box-shadow:0 0 50px rgba(168,85,247,0.4)}
+        .modal-close{background:var(--danger);color:#fff;border:none;padding:11px 26px;border-radius:10px;cursor:pointer;font-weight:700;font-family:inherit;margin-top:14px;transition:all 0.2s}
+        .modal-close:hover{transform:scale(1.05)}
+        .empty{text-align:center;padding:45px 20px;color:var(--text-muted)}
+        .empty-ico{font-size:3.5em;margin-bottom:14px;opacity:0.3}
+        .empty-txt{font-size:1em}
+        .logout-btn{position:absolute;top:20px;right:20px;font-size:1.5em;text-decoration:none;opacity:0.6;transition:all 0.3s;z-index:10}
+        .logout-btn:hover{opacity:1;transform:scale(1.1)}
+        @media(max-width:768px){.logout-btn{top:12px;right:12px;font-size:1.3em}}
+    </style>
+</head>
+<body>
+    <div class="bg"><div class="glow glow-1"></div><div class="glow glow-2"></div><div class="glow glow-3"></div><div class="grid"></div></div>
+    <div class="container">
+        <header class="header">
+            <a href="/logout" class="logout-btn" title="Выйти">🚪</a>
+            <div class="logo-wrap">
+                <div class="logo-pulse"></div><div class="logo-pulse"></div><div class="logo-pulse"></div>
+                <div class="logo">⚡</div>
+            </div>
+            <h1 class="title">STEPAN VPN</h1>
+            <p class="subtitle">Admin Panel</p>
+        </header>
+
+        <div class="stats">
+            <div class="stat"><div class="stat-icon">👥</div><div class="stat-val" id="total">0</div><div class="stat-label">Клиентов</div></div>
+            <div class="stat"><div class="stat-icon">✅</div><div class="stat-val" id="active">0</div><div class="stat-label">Активных</div></div>
+            <div class="stat"><div class="stat-icon">📊</div><div class="stat-val" id="traffic">0</div><div class="stat-label">Трафик GB</div></div>
+            <div class="stat"><div class="stat-icon">🤖</div><div class="stat-val" style="font-size:0.8em">@stepavpnbot</div><div class="stat-label">Telegram</div></div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div class="card-ico">🖥️</div><h2 class="card-title">Настройка сервера</h2></div>
+            <form id="serverForm">
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label">IP сервера</label><input type="text" class="form-input" id="serverIp" placeholder="123.45.67.89" required></div>
+                    <div class="form-group"><label class="form-label">SSH порт</label><input type="number" class="form-input" id="sshPort" value="22" required></div>
+                    <div class="form-group"><label class="form-label">Пользователь</label><input type="text" class="form-input" id="sshUser" value="root" required></div>
+                    <div class="form-group"><label class="form-label">Пароль</label><input type="password" class="form-input" id="sshPass" placeholder="••••••••" required></div>
+                </div>
+                <div class="form-group" style="margin-top:16px">
+                    <label class="form-label">Маскировка под сайт (белый список РФ)</label>
+                    <select class="form-select" id="masquerade">
+                        <option value="msk.t2.ru">Tele2 (msk.t2.ru)</option>
+                        <option value="eh44.vk.com">VK (eh44.vk.com)</option>
+                        <option value="ads.x5.ru">Пятёрочка (ads.x5.ru)</option>
+                        <option value="api-maps.yandex.ru">Яндекс Карты (api-maps.yandex.ru)</option>
+                        <option value="io.ozone.ru">Ozon (io.ozone.ru)</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn btn-success btn-full" id="setupBtn">🚀 Настроить сервер</button>
+                <div class="alert" id="setupAlert"></div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div class="card-ico">➕</div><h2 class="card-title">Новый клиент</h2></div>
+            <form id="clientForm">
+                <div class="form-grid">
+                    <div class="form-group"><label class="form-label">Имя</label><input type="text" class="form-input" id="clientName" placeholder="Иван Иванов" required></div>
+                    <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input" id="clientEmail" placeholder="client@example.com"></div>
+                    <div class="form-group"><label class="form-label">Лимит GB (0=∞)</label><input type="number" class="form-input" id="trafficLimit" value="0" min="0"></div>
+                    <div class="form-group"><label class="form-label">Истекает</label><input type="date" class="form-input" id="expiryDate"></div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-full">✨ Создать</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div class="card-ico">👥</div><h2 class="card-title">Клиенты</h2></div>
+            <div class="clients" id="clients"><div class="empty"><div class="empty-ico">👤</div><div class="empty-txt">Клиентов пока нет</div></div></div>
+        </div>
+    </div>
+
+    <div class="modal" id="qrModal">
+        <div class="modal-box">
+            <h3 style="font-size:1.2em;margin-bottom:4px">📷 QR код</h3>
+            <p style="color:var(--text-muted);font-size:0.85em">Отсканируйте в HAPP</p>
+            <img id="qrImg" src="" alt="QR">
+            <button class="modal-close" onclick="closeModal()">Закрыть</button>
+        </div>
+    </div>
+
+    <script>
+        let clients=[];
+        async function load(){try{const r=await fetch('/api/clients');clients=await r.json();render();stats()}catch(e){}}
+        function render(){const c=document.getElementById('clients');if(!clients.length){c.innerHTML='<div class="empty"><div class="empty-ico">👤</div><div class="empty-txt">Клиентов пока нет</div></div>';return}
+            c.innerHTML=clients.map(x=>`<div class="client"><div class="client-info"><div class="client-name"><span class="dot ${x.enabled?'':'off'}"></span>${x.name}</div><div class="client-uuid">${x.uuid.substring(0,18)}...</div></div><div class="client-btns"><button class="btn-sm btn-sub" onclick="openSub(${x.id})">📱</button><button class="btn-sm btn-qr" onclick="showQR(${x.id})">📷</button><button class="btn-sm btn-toggle" onclick="toggle(${x.id})">${x.enabled?'⏸️':'▶️'}</button><button class="btn-sm btn-del" onclick="del(${x.id})">🗑️</button></div></div>`).join('')}
+        function stats(){document.getElementById('total').textContent=clients.length;document.getElementById('active').textContent=clients.filter(x=>x.enabled).length;document.getElementById('traffic').textContent=(clients.reduce((s,x)=>s+x.traffic_used,0)/1024).toFixed(1)}
+        document.getElementById('clientForm').addEventListener('submit',async e=>{e.preventDefault();await fetch('/api/clients',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:document.getElementById('clientName').value,email:document.getElementById('clientEmail').value,traffic_limit:parseInt(document.getElementById('trafficLimit').value),expiry_date:document.getElementById('expiryDate').value})});document.getElementById('clientForm').reset();load()})
+        async function del(id){if(confirm('Удалить?')){await fetch(`/api/clients/${id}`,{method:'DELETE'});load()}}
+        async function toggle(id){await fetch(`/api/clients/${id}/toggle`,{method:'POST'});load()}
+        function showQR(id){document.getElementById('qrImg').src=`/api/qrcode/${id}`;document.getElementById('qrModal').classList.add('show')}
+        function openSub(id){window.open(`/subscription/${id}`,'_blank')}
+        function closeModal(){document.getElementById('qrModal').classList.remove('show')}
+        document.getElementById('serverForm').addEventListener('submit',async e=>{e.preventDefault();const btn=document.getElementById('setupBtn'),alert=document.getElementById('setupAlert');btn.classList.add('btn-loading');btn.innerHTML='⏳ Настройка...';alert.className='alert show loading';alert.innerHTML='🔄 Подключение к серверу...';
+            try{const r=await fetch('/api/server/setup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({ip:document.getElementById('serverIp').value,port:parseInt(document.getElementById('sshPort').value),user:document.getElementById('sshUser').value,password:document.getElementById('sshPass').value,masquerade:document.getElementById('masquerade').value})});const d=await r.json();
+                if(d.success){alert.className='alert show success';alert.innerHTML=`✅ Готово!<br>Public Key: <code>${d.publicKey}</code><br>Short ID: <code>${d.shortId}</code><br>Маскировка: <code>${d.masquerade}</code>`;document.getElementById('serverForm').reset()}else throw new Error(d.error)}
+            catch(err){alert.className='alert show error';alert.innerHTML=`❌ ${err.message}`}
+            finally{btn.classList.remove('btn-loading');btn.innerHTML='🚀 Настроить сервер'}})
+        load()
+    </script>
+</body>
+</html>

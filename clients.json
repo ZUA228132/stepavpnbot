@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "uuid": "1210f527-e2a9-42cc-9aab-540167e58182",
+    "name": "Тест Тестович",
+    "email": "",
+    "traffic_limit": 0,
+    "traffic_used": 0,
+    "expiry_date": "2026-01-05",
+    "created_at": "2026-01-04T23:20:15.993197",
+    "enabled": false
+  },
+  {
+    "id": 2,
+    "uuid": "fd1f21ed-3234-4241-a128-6e313deff18d",
+    "name": "ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ ᅠ.",
+    "email": "",
+    "telegram_id": 7086128174,
+    "telegram_username": "nenix",
+    "traffic_limit": 0,
+    "traffic_used": 0,
+    "expiry_date": "",
+    "created_at": "2026-01-04T23:42:13.501225",
+    "enabled": true
+  }
+]

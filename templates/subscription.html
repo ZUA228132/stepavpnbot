@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+    <meta name="theme-color" content="#050505">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>⚡ STEPAN VPN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{--primary:#a855f7;--primary-dark:#7c3aed;--secondary:#06b6d4;--success:#22c55e;--bg:#050505;--card:rgba(20,20,25,0.9);--border:rgba(168,85,247,0.12);--text:#fafafa;--muted:#71717a}
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',sans-serif;background:var(--bg);min-height:100vh;min-height:100dvh;color:var(--text);overflow-x:hidden;-webkit-font-smoothing:antialiased}
+        
+        .bg{position:fixed;inset:0;z-index:-1;overflow:hidden}
+        .bg::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg at 50% 50%,transparent,rgba(168,85,247,0.03) 60deg,transparent 120deg);animation:rotate 60s linear infinite}
+        @keyframes rotate{to{transform:rotate(360deg)}}
+        .orb{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.5}
+        .orb-1{width:500px;height:500px;background:var(--primary);top:-200px;left:-150px;animation:f1 20s ease-in-out infinite}
+        .orb-2{width:350px;height:350px;background:var(--secondary);bottom:-150px;right:-100px;animation:f2 25s ease-in-out infinite}
+        @keyframes f1{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,40px)}}
+        @keyframes f2{0%,100%{transform:translate(0,0)}50%{transform:translate(-30px,-30px)}}
+        
+        .container{max-width:480px;margin:0 auto;padding:16px 14px 30px;padding-top:max(16px, env(safe-area-inset-top));position:relative;z-index:1}
+
+        /* HEADER */
+        .header{text-align:center;padding:28px 0 22px}
+        .logo-wrap{position:relative;display:inline-block;margin-bottom:12px}
+        .ring{position:absolute;inset:-12px;border:2px solid var(--primary);border-radius:50%;opacity:0;animation:ring 3s ease-out infinite}
+        .ring:nth-child(2){animation-delay:1s}.ring:nth-child(3){animation-delay:2s}
+        @keyframes ring{0%{transform:scale(0.8);opacity:0.6}100%{transform:scale(1.4);opacity:0}}
+        .logo{position:relative;width:68px;height:68px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 50px rgba(168,85,247,0.5)}
+        .title{font-size:2.2em;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#fff,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .badge{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);padding:9px 18px;border-radius:50px;font-weight:600;font-size:0.9em;margin-top:10px}
+        .badge-dot{width:8px;height:8px;background:var(--success);border-radius:50%;box-shadow:0 0 8px var(--success);animation:blink 2s infinite}
+        .badge-dot.off{background:#ef4444;box-shadow:0 0 8px #ef4444}
+        @keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
+
+        /* CARDS */
+        .card{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:20px;padding:22px 18px;margin-bottom:14px}
+        .card-head{display:flex;align-items:center;gap:11px;margin-bottom:16px}
+        .card-ico{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 6px 20px rgba(168,85,247,0.3)}
+        .card-title{font-size:1.1em;font-weight:700}
+
+        /* STATS */
+        .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+        .stat{background:rgba(168,85,247,0.06);border:1px solid var(--border);border-radius:14px;padding:14px 10px;text-align:center}
+        .stat-val{font-size:1.5em;font-weight:800;background:linear-gradient(135deg,#fff,var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-label{font-size:0.65em;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px}
+
+        /* APP SECTION */
+        .app-section{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(6,182,212,0.08));border:1px solid var(--border);border-radius:18px;padding:18px;text-align:center;margin-bottom:14px}
+        .device-badge{display:inline-flex;align-items:center;gap:6px;background:var(--success);padding:8px 14px;border-radius:10px;font-size:0.8em;font-weight:700;margin-bottom:12px}
+        .app-title{font-size:1.05em;font-weight:700;margin-bottom:4px}
+        .app-sub{font-size:0.8em;color:var(--muted);margin-bottom:14px}
+        .app-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+        .app-btn{display:inline-flex;align-items:center;gap:8px;background:#000;border:1px solid rgba(255,255,255,0.1);color:#fff;text-decoration:none;padding:10px 16px;border-radius:12px;font-weight:600;font-size:0.85em;transition:all 0.3s}
+        .app-btn:hover{transform:translateY(-2px);border-color:rgba(255,255,255,0.2)}
+        .app-btn svg{width:22px;height:22px}
+        .app-btn-text{text-align:left;line-height:1.2}
+        .app-btn-small{font-size:0.6em;opacity:0.7;display:block}
+
+        /* CONNECT */
+        .connect{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:20px;padding:24px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 0 50px rgba(168,85,247,0.4)}
+        .connect::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);pointer-events:none}
+        .connect-title{font-size:1.2em;font-weight:800;margin-bottom:6px}
+        .connect-sub{font-size:0.85em;opacity:0.85;margin-bottom:16px}
+        .btn-connect{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;background:#fff;color:var(--primary-dark);border:none;border-radius:14px;font-size:1.05em;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.3s;text-decoration:none;text-transform:uppercase;letter-spacing:0.5px}
+        .btn-connect:hover{transform:scale(1.02);box-shadow:0 10px 30px rgba(0,0,0,0.3)}
+        .copy-box{background:rgba(0,0,0,0.3);border-radius:14px;padding:14px;margin-top:14px}
+        .copy-label{font-size:0.7em;opacity:0.7;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px}
+        .copy-input{width:100%;padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-family:monospace;font-size:0.7em;margin-bottom:10px}
+        .btn-copy{width:100%;padding:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:6px}
+        .btn-copy:hover{background:rgba(255,255,255,0.25)}
+
+        /* QR */
+        .qr-box{text-align:center;padding:20px;background:rgba(168,85,247,0.04);border-radius:16px}
+        .qr-box img{width:160px;height:160px;border-radius:14px;border:3px solid var(--primary);box-shadow:0 0 40px rgba(168,85,247,0.4)}
+        .qr-hint{font-size:0.8em;color:var(--muted);margin-top:12px}
+
+        /* FEATURES */
+        .features{list-style:none}
+        .features li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:0.9em}
+        .features li:last-child{border-bottom:none}
+        .check{width:26px;height:26px;background:linear-gradient(135deg,var(--success),#16a34a);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
+
+        /* TG */
+        .tg{background:linear-gradient(135deg,#0088cc,#00aaff);border-radius:16px;padding:20px;text-align:center}
+        .tg h3{font-size:1.05em;margin-bottom:6px}
+        .tg p{font-size:0.85em;opacity:0.9;margin-bottom:12px}
+        .tg-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:700;transition:all 0.3s}
+        .tg-btn:hover{background:rgba(255,255,255,0.3);transform:scale(1.05)}
+
+        /* TOAST - FIXED */
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--success);color:#fff;padding:14px 24px;border-radius:12px;font-weight:700;box-shadow:0 10px 30px rgba(34,197,94,0.4);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);z-index:1000;display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none}
+        .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+        .footer{text-align:center;padding:24px 0 16px;color:var(--muted);font-size:0.75em}
+        .footer a{color:#c084fc;text-decoration:none}
+    </style>
+</head>
+<body>
+    <div class="bg"><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+    <div class="container">
+        <header class="header">
+            <div class="logo-wrap"><div class="ring"></div><div class="ring"></div><div class="ring"></div><div class="logo">⚡</div></div>
+            <h1 class="title">STEPAN VPN</h1>
+            <div class="badge"><span class="badge-dot {{ '' if client.enabled else 'off' }}"></span>{{ client.name }}</div>
+        </header>
+
+        <div class="card">
+            <div class="card-head"><div class="card-ico">📊</div><h2 class="card-title">Статус</h2></div>
+            <div class="stats">
+                <div class="stat"><div class="stat-val">{{ client.traffic_limit if client.traffic_limit > 0 else '∞' }}</div><div class="stat-label">Лимит GB</div></div>
+                <div class="stat"><div class="stat-val">{{ '%.1f'|format(client.traffic_used / 1024) }}</div><div class="stat-label">Использовано</div></div>
+                <div class="stat"><div class="stat-val">{{ '✅' if client.enabled else '❌' }}</div><div class="stat-label">Статус</div></div>
+            </div>
+        </div>
+
+        <div class="app-section" id="appSection">
+            <div class="device-badge" id="deviceBadge">📱 Определяем...</div>
+            <div class="app-title">Скачайте HAPP</div>
+            <div class="app-sub">Приложение для VPN</div>
+            <div class="app-btns" id="appBtns">
+                <a href="https://apps.apple.com/app/happ/id6474383252" class="app-btn" id="iosBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M13 3.5c.73-.83 1.94-1.46 2.94-1.5.13 1.17-.34 2.35-1.04 3.19-.69.85-1.83 1.51-2.95 1.42-.15-1.15.41-2.35 1.05-3.11z"/></svg>
+                    <span class="app-btn-text"><span class="app-btn-small">Скачать в</span>App Store</span>
+                </a>
+                <a href="https://play.google.com/store/apps/details?id=com.happ.app" class="app-btn" id="androidBtn">
+                    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M3,20.5V3.5C3,2.91 3.34,2.39 3.84,2.15L13.69,12L3.84,21.85C3.34,21.6 3,21.09 3,20.5M16.81,15.12L6.05,21.34L14.54,12.85L16.81,15.12M20.16,10.81C20.5,11.08 20.75,11.5 20.75,12C20.75,12.5 20.53,12.9 20.18,13.18L17.89,14.5L15.39,12L17.89,9.5L20.16,10.81M6.05,2.66L16.81,8.88L14.54,11.15L6.05,2.66Z"/></svg>
+                    <span class="app-btn-text"><span class="app-btn-small">Скачать в</span>Google Play</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="connect">
+            <div class="connect-title">🚀 Подключиться</div>
+            <div class="connect-sub">Нажмите для добавления в HAPP</div>
+            <a href="happ://add?url={{ subscription_url }}" class="btn-connect" id="connectBtn">⚡ Подключить VPN</a>
+            <div class="copy-box">
+                <div class="copy-label">Или скопируйте ссылку</div>
+                <input type="text" class="copy-input" id="subLink" value="{{ subscription_url }}" readonly>
+                <button class="btn-copy" onclick="copyLink()">📋 Копировать</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div class="card-ico">📷</div><h2 class="card-title">QR код</h2></div>
+            <div class="qr-box">
+                <img src="/api/qrcode/{{ client.id }}" alt="QR" loading="lazy">
+                <p class="qr-hint">Отсканируйте в HAPP</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-head"><div class="card-ico">✨</div><h2 class="card-title">Преимущества</h2></div>
+            <ul class="features">
+                <li><span class="check">✓</span>Reality протокол — невозможно заблокировать</li>
+                <li><span class="check">✓</span>Скорость до 1 Гбит/с</li>
+                <li><span class="check">✓</span>Маскировка под HTTPS</li>
+                <li><span class="check">✓</span>Защита от DPI</li>
+                <li><span class="check">✓</span>Работает 24/7</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <div class="tg">
+                <h3>🤖 Telegram бот</h3>
+                <p>Управляйте подпиской</p>
+                <a href="https://t.me/stepavpnbot" class="tg-btn" target="_blank">📱 @stepavpnbot</a>
+            </div>
+        </div>
+
+        <footer class="footer">⚡ STEPAN VPN — Premium VPN<br><a href="https://t.me/stepavpnbot">@stepavpnbot</a></footer>
+    </div>
+    <div class="toast" id="toast">✅ Скопировано!</div>
+
+    <script>
+        const ua=navigator.userAgent.toLowerCase();
+        const isIOS=/iphone|ipad|ipod/.test(ua);
+        const isAndroid=/android/.test(ua);
+        const isMac=/macintosh|mac os x/.test(ua);
+        const isWin=/windows/.test(ua);
+        const badge=document.getElementById('deviceBadge');
+        const iosBtn=document.getElementById('iosBtn');
+        const androidBtn=document.getElementById('androidBtn');
+        const connectBtn=document.getElementById('connectBtn');
+
+        if(isIOS){badge.innerHTML='📱 iPhone/iPad';androidBtn.style.display='none'}
+        else if(isAndroid){badge.innerHTML='📱 Android';iosBtn.style.display='none'}
+        else if(isMac){badge.innerHTML='💻 macOS';badge.style.background='#3b82f6'}
+        else if(isWin){badge.innerHTML='💻 Windows';badge.style.background='#3b82f6'}
+        else{badge.innerHTML='🌐 Браузер';badge.style.background='#6366f1'}
+
+        function copyLink(){
+            const input=document.getElementById('subLink');
+            input.select();input.setSelectionRange(0,99999);
+            navigator.clipboard.writeText(input.value).then(()=>showToast()).catch(()=>{document.execCommand('copy');showToast()})
+        }
+        function showToast(){const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000)}
+
+        connectBtn.addEventListener('click',function(e){
+            setTimeout(()=>{
+                if(isIOS)window.location.href='https://apps.apple.com/app/happ/id6474383252';
+                else if(isAndroid)window.location.href='https://play.google.com/store/apps/details?id=com.happ.app';
+            },2500)
+        })
+    </script>
+</body>
+</html>
