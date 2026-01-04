@@ -129,11 +129,16 @@
         <div class="connect">
             <div class="connect-title">🚀 Подключиться</div>
             <div class="connect-sub">Нажмите для добавления в HAPP</div>
-            <a href="happ://add?url={{ vless_link }}" class="btn-connect" id="connectBtn">⚡ Подключить VPN</a>
+            <a href="happ://add?url={{ request.url_root }}api/sub/{{ sub_code }}" class="btn-connect" id="connectBtn">⚡ Подключить VPN</a>
             <div class="copy-box">
-                <div class="copy-label">Или скопируйте VLESS ссылку</div>
+                <div class="copy-label">Ссылка на подписку</div>
+                <input type="text" class="copy-input" id="subUrl" value="{{ request.url_root }}api/sub/{{ sub_code }}" readonly>
+                <button class="btn-copy" onclick="copyLink('subUrl')">📋 Копировать ссылку</button>
+            </div>
+            <div class="copy-box" style="margin-top:10px">
+                <div class="copy-label">Или VLESS конфиг напрямую</div>
                 <input type="text" class="copy-input" id="vlessLink" value="{{ vless_link }}" readonly>
-                <button class="btn-copy" onclick="copyLink()">📋 Копировать</button>
+                <button class="btn-copy" onclick="copyLink('vlessLink')">📋 Копировать VLESS</button>
             </div>
         </div>
 
@@ -185,8 +190,8 @@
         else if(isWin){badge.innerHTML='💻 Windows';badge.style.background='#3b82f6'}
         else{badge.innerHTML='🌐 Браузер';badge.style.background='#6366f1'}
 
-        function copyLink(){
-            const input=document.getElementById('vlessLink');
+        function copyLink(inputId){
+            const input=document.getElementById(inputId);
             input.select();input.setSelectionRange(0,99999);
             navigator.clipboard.writeText(input.value).then(()=>showToast()).catch(()=>{document.execCommand('copy');showToast()})
         }

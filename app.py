@@ -94,31 +94,32 @@ def generate_short_id():
     return os.urandom(8).hex()
 
 def create_vless_link(client, server_config):
-    """Создание VLESS ссылки для импорта с иконкой"""
+    """Создание VLESS ссылки — формат как у Phantom VPN"""
     address = server_config['address']
     port = server_config['port']
     uuid_str = client['uuid']
+    sni = server_config['serverName']
     
     params = {
         'encryption': 'none',
         'security': 'reality',
-        'sni': server_config['serverName'],
+        'sni': sni,
         'fp': 'chrome',
         'pbk': server_config['publicKey'],
         'sid': server_config['shortId'],
+        'spx': '/',
         'type': 'tcp',
         'flow': 'xtls-rprx-vision'
     }
     
     param_str = '&'.join([f"{k}={v}" for k, v in params.items()])
     
-    # Название с информацией о подписке
+    # Название с флагом и инфой
     traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "∞"
-    name = f"⚡ STEPAN VPN | {client['name']} | {traffic_info}"
+    name = f"⚡STEPAN | {client['name']} | {traffic_info}"
     name_encoded = urllib.parse.quote(name)
     
     vless_link = f"vless://{uuid_str}@{address}:{port}?{param_str}#{name_encoded}"
-    
     return vless_link
 
 @app.route('/')
@@ -216,7 +217,7 @@ def toggle_client(client_id):
 
 @app.route('/api/sub/<sub_code>')
 def get_subscription(sub_code):
-    """Генерация подписки для HAPP по коду — расширенный формат"""
+    """Генерация подписки для HAPP — простой base64 VLESS формат"""
     client = get_client_by_code(sub_code)
     
     if not client:
@@ -225,44 +226,16 @@ def get_subscription(sub_code):
     server_config = load_server_config()
     vless_link = create_vless_link(client, server_config)
     
-    # Расширенный формат подписки для HAPP с метаданными
-    traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "∞"
-    days_left = ""
-    if client.get('expiry_date'):
-        try:
-            from datetime import datetime
-            exp = datetime.fromisoformat(client['expiry_date'])
-            days = (exp - datetime.now()).days
-            days_left = f"Дней осталось: {days}" if days > 0 else "Истекла"
-        except:
-            days_left = ""
+    # HAPP использует простой base64 encoded VLESS link
+    subscription = base64.b64encode(vless_link.encode()).decode()
     
-    # Формируем описание
-    description_lines = [
-        f"🔗 Подписка: {sub_code}",
-        f"📊 Статус: {'✅ Active' if client['enabled'] else '❌ Disabled'}",
-    ]
-    if days_left:
-        description_lines.append(f"📅 {days_left}")
-    description_lines.append(f"🛡️ Reality Protocol")
-    
-    # Динамический URL иконки
-    icon_url = f"{request.host_url}api/icon.png"
-    
-    subscription_info = {
-        "name": "STEPAN VPN",
-        "icon": icon_url,
-        "description": "\n".join(description_lines),
-        "support": SUPPORT_URL,
-        "servers": [vless_link]
+    return subscription, 200, {
+        'Content-Type': 'text/plain; charset=utf-8',
+        'Profile-Update-Interval': '1',
+        'Subscription-Userinfo': f'upload=0; download={client["traffic_used"]}; total={client["traffic_limit"] * 1024 * 1024 * 1024 if client["traffic_limit"] > 0 else 0}; expire=0',
+        'Profile-Title': 'STEPAN VPN',
+        'Support-Url': SUPPORT_URL
     }
-    
-    # HAPP принимает base64 encoded JSON или просто base64 VLESS
-    # Пробуем JSON формат
-    sub_json = json.dumps(subscription_info, ensure_ascii=False)
-    subscription = base64.b64encode(sub_json.encode()).decode()
-    
-    return subscription, 200, {'Content-Type': 'text/plain'}
 
 @app.route('/api/qr/<sub_code>')
 def get_qrcode(sub_code):
