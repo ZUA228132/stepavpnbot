@@ -3,6 +3,8 @@ from telebot import types
 import json
 import os
 import uuid
+import secrets
+import string
 from datetime import datetime
 
 BOT_TOKEN = '8548659256:AAErmzpCN4i8dMkOEYg4rc6ZqnXc4G_DzEY'
@@ -11,6 +13,10 @@ USERS_FILE = 'bot_users.json'
 PANEL_URL = os.environ.get('PANEL_URL', 'http://127.0.0.1:5000')
 
 bot = telebot.TeleBot(BOT_TOKEN)
+
+def generate_sub_code(length=7):
+    chars = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
 def load_clients():
     if os.path.exists(CLIENTS_FILE):
@@ -43,8 +49,17 @@ def get_or_create_client(user_id, username, first_name):
         if client:
             return client, False
     
+    # Генерируем уникальный код подписки
+    while True:
+        sub_code = generate_sub_code()
+        if not any(c.get('sub_code') == sub_code for c in clients):
+            break
+    
+    new_id = max([c['id'] for c in clients], default=0) + 1
+    
     new_client = {
-        'id': len(clients) + 1,
+        'id': new_id,
+        'sub_code': sub_code,
         'uuid': str(uuid.uuid4()),
         'name': first_name or username or f'User_{user_id}',
         'email': '',
@@ -62,6 +77,7 @@ def get_or_create_client(user_id, username, first_name):
     
     users[user_id_str] = {
         'client_id': new_client['id'],
+        'sub_code': sub_code,
         'username': username,
         'first_name': first_name,
         'registered_at': datetime.now().isoformat()
@@ -107,53 +123,45 @@ def start(message):
 @bot.callback_query_handler(func=lambda call: call.data == "get_sub")
 def get_subscription(call):
     user = call.from_user
-    
-    # Сначала отвечаем на callback чтобы убрать "часики"
     bot.answer_callback_query(call.id)
     
     client, is_new = get_or_create_client(user.id, user.username, user.first_name)
+    sub_code = client.get('sub_code', str(client['id']))
     
-    subscription_url = f"{PANEL_URL}/subscription/{client['id']}"
+    subscription_url = f"{PANEL_URL}/s/{sub_code}"
     
     if is_new:
         text = f"""
 🎉 *Подписка создана!*
 
 Ваша персональная страница:
-🔗 {subscription_url}
+🔗 `{subscription_url}`
 
 На странице вы найдёте:
+• Готовую VLESS ссылку с ключами
+• QR код — отсканируй и подключайся
 • Кнопку быстрого подключения
-• QR код для сканирования
-• Подробную инструкцию
 
-⚡ Нажмите кнопку ниже, чтобы открыть страницу подписки!
+⚡ Нажмите кнопку ниже!
 """
     else:
         text = f"""
 🔑 *Ваша подписка*
 
 Страница подписки:
-🔗 {subscription_url}
+🔗 `{subscription_url}`
 
-• Кнопка быстрого подключения
-• QR код
+• Готовая VLESS ссылка
+• QR код для сканирования
 • Статистика использования
 
-⚡ Нажмите кнопку ниже для подключения!
+⚡ Отсканируй QR или нажми кнопку!
 """
     
-    # Создаём клавиатуру с WebApp кнопкой И обычной ссылкой
     markup = types.InlineKeyboardMarkup(row_width=1)
-    
-    # WebApp кнопка - открывает страницу внутри Telegram
     webapp = types.WebAppInfo(url=subscription_url)
     markup.add(types.InlineKeyboardButton("⚡ Открыть подписку", web_app=webapp))
-    
-    # Обычная ссылка - открывает в браузере
     markup.add(types.InlineKeyboardButton("🌐 Открыть в браузере", url=subscription_url))
-    
-    # Кнопка назад
     markup.add(types.InlineKeyboardButton("🔙 Главное меню", callback_data="menu"))
     
     bot.edit_message_text(
@@ -183,6 +191,7 @@ def show_status(call):
             status = "✅ Активна" if client['enabled'] else "❌ Отключена"
             traffic_limit = f"{client['traffic_limit']} GB" if client['traffic_limit'] > 0 else "∞ Безлимит"
             traffic_used = f"{client['traffic_used'] / 1024:.2f} GB"
+            sub_code = client.get('sub_code', '---')
             
             text = f"""
 📊 *Статус подписки*
@@ -193,7 +202,7 @@ def show_status(call):
 📈 Использовано: {traffic_used}
 📅 Создана: {client['created_at'][:10]}
 
-🆔 UUID: `{client['uuid'][:8]}...`
+🔗 Код: `{sub_code}`
 """
         else:
             text = "❌ Подписка не найдена"
@@ -223,17 +232,15 @@ def show_help(call):
 *2️⃣ Получите подписку*
 Нажмите «Получить подписку» в боте
 
-*3️⃣ Откройте страницу*
-Нажмите «Открыть подписку» — страница откроется прямо в Telegram
+*3️⃣ Подключитесь*
+• Отсканируйте QR код в HAPP
+• Или нажмите «Подключить VPN»
+• Или скопируйте VLESS ссылку
 
-*4️⃣ Подключитесь*
-На странице нажмите большую кнопку «Подключить VPN» — приложение HAPP откроется автоматически
+*4️⃣ Готово!*
+VPN подключится автоматически 🚀
 
-*5️⃣ Готово!*
-Выберите сервер и подключайтесь 🚀
-
-💡 *Альтернативный способ:*
-Скопируйте ссылку и вставьте в HAPP вручную
+💡 QR код уже содержит все ключи — просто отсканируй и кайфуй!
 """
     
     markup = types.InlineKeyboardMarkup()

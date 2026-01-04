@@ -10,7 +10,9 @@ import subprocess
 import os
 from datetime import datetime
 import paramiko
-import time
+import secrets
+import string
+import urllib.parse
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'stepan-vpn-secret-key-2024')
@@ -18,6 +20,9 @@ CORS(app)
 
 # Пароль для админки
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'Artem1522@')
+
+# Иконка для HAPP (base64 PNG или URL)
+HAPP_ICON_URL = "https://i.imgur.com/7QjKsCY.png"  # Молния ⚡
 
 CONFIG_FILE = 'server_config.json'
 CLIENTS_FILE = 'clients.json'
@@ -29,6 +34,11 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+def generate_sub_code(length=7):
+    """Генерация случайного кода для подписки (a-z, A-Z, 0-9)"""
+    chars = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
 MASQUERADE_SITES = [
     {'name': 'Tele2', 'domain': 'msk.t2.ru'},
@@ -43,11 +53,11 @@ def load_server_config():
         with open(CONFIG_FILE, 'r') as f:
             return json.load(f)
     return {
-        'address': 'YOUR_SERVER_IP',
+        'address': os.environ.get('VPN_SERVER_IP', 'YOUR_SERVER_IP'),
         'port': 443,
-        'serverName': 'io.ozone.ru',
-        'publicKey': 'YOUR_PUBLIC_KEY',
-        'shortId': 'YOUR_SHORT_ID'
+        'serverName': os.environ.get('VPN_SERVER_NAME', 'io.ozone.ru'),
+        'publicKey': os.environ.get('VPN_PUBLIC_KEY', 'YOUR_PUBLIC_KEY'),
+        'shortId': os.environ.get('VPN_SHORT_ID', 'YOUR_SHORT_ID')
     }
 
 def load_clients():
@@ -59,6 +69,11 @@ def load_clients():
 def save_clients(clients):
     with open(CLIENTS_FILE, 'w', encoding='utf-8') as f:
         json.dump(clients, f, indent=2, ensure_ascii=False)
+
+def get_client_by_code(sub_code):
+    """Найти клиента по коду подписки"""
+    clients = load_clients()
+    return next((c for c in clients if c.get('sub_code') == sub_code), None)
 
 def generate_keys():
     """Генерация ключей Reality"""
@@ -76,7 +91,7 @@ def generate_short_id():
     return os.urandom(8).hex()
 
 def create_vless_link(client, server_config):
-    """Создание VLESS ссылки для импорта"""
+    """Создание VLESS ссылки для импорта с иконкой"""
     address = server_config['address']
     port = server_config['port']
     uuid_str = client['uuid']
@@ -95,11 +110,8 @@ def create_vless_link(client, server_config):
     param_str = '&'.join([f"{k}={v}" for k, v in params.items()])
     
     # Название с информацией о подписке
-    traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "Unlimited"
-    name = f"STEPAN VPN | {client['name']} | {traffic_info}"
-    
-    # URL encode имени
-    import urllib.parse
+    traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "∞"
+    name = f"⚡ STEPAN VPN | {client['name']} | {traffic_info}"
     name_encoded = urllib.parse.quote(name)
     
     vless_link = f"vless://{uuid_str}@{address}:{port}?{param_str}#{name_encoded}"
@@ -126,35 +138,47 @@ def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
 
-@app.route('/subscription/<int:client_id>')
-def subscription_page(client_id):
-    """Страница подписки с инструкциями"""
-    clients = load_clients()
-    client = next((c for c in clients if c['id'] == client_id), None)
+@app.route('/s/<sub_code>')
+def subscription_page(sub_code):
+    """Страница подписки по коду"""
+    client = get_client_by_code(sub_code)
     
     if not client:
-        return "Клиент не найден", 404
+        return "Подписка не найдена", 404
     
-    subscription_url = f"{request.host_url}api/subscription/{client_id}"
+    server_config = load_server_config()
+    vless_link = create_vless_link(client, server_config)
     
     return render_template('subscription.html', 
                          client=client, 
-                         subscription_url=subscription_url)
+                         vless_link=vless_link,
+                         sub_code=sub_code)
 
 @app.route('/api/clients', methods=['GET'])
+@login_required
 def get_clients():
     clients = load_clients()
     return jsonify(clients)
 
 @app.route('/api/clients', methods=['POST'])
+@login_required
 def add_client():
     data = request.json
     clients = load_clients()
     
+    # Генерируем уникальный код подписки
+    while True:
+        sub_code = generate_sub_code()
+        if not any(c.get('sub_code') == sub_code for c in clients):
+            break
+    
+    new_id = max([c['id'] for c in clients], default=0) + 1
+    
     new_client = {
-        'id': len(clients) + 1,
+        'id': new_id,
+        'sub_code': sub_code,
         'uuid': str(uuid.uuid4()),
-        'name': data.get('name', f'Client {len(clients) + 1}'),
+        'name': data.get('name', f'Client {new_id}'),
         'email': data.get('email', ''),
         'traffic_limit': data.get('traffic_limit', 0),
         'traffic_used': 0,
@@ -169,6 +193,7 @@ def add_client():
     return jsonify(new_client)
 
 @app.route('/api/clients/<int:client_id>', methods=['DELETE'])
+@login_required
 def delete_client(client_id):
     clients = load_clients()
     clients = [c for c in clients if c['id'] != client_id]
@@ -176,6 +201,7 @@ def delete_client(client_id):
     return jsonify({'success': True})
 
 @app.route('/api/clients/<int:client_id>/toggle', methods=['POST'])
+@login_required
 def toggle_client(client_id):
     clients = load_clients()
     for client in clients:
@@ -185,17 +211,15 @@ def toggle_client(client_id):
     save_clients(clients)
     return jsonify({'success': True})
 
-@app.route('/api/subscription/<int:client_id>')
-def get_subscription(client_id):
-    """Генерация подписки для HAPP"""
-    clients = load_clients()
-    client = next((c for c in clients if c['id'] == client_id), None)
+@app.route('/api/sub/<sub_code>')
+def get_subscription(sub_code):
+    """Генерация подписки для HAPP по коду"""
+    client = get_client_by_code(sub_code)
     
     if not client:
         return jsonify({'error': 'Client not found'}), 404
     
     server_config = load_server_config()
-    
     vless_link = create_vless_link(client, server_config)
     
     # Кодируем в base64 для подписки
@@ -203,24 +227,22 @@ def get_subscription(client_id):
     
     return subscription, 200, {'Content-Type': 'text/plain'}
 
-@app.route('/api/qrcode/<int:client_id>')
-def get_qrcode(client_id):
-    """Генерация QR кода"""
-    clients = load_clients()
-    client = next((c for c in clients if c['id'] == client_id), None)
+@app.route('/api/qr/<sub_code>')
+def get_qrcode(sub_code):
+    """Генерация QR кода по коду подписки"""
+    client = get_client_by_code(sub_code)
     
     if not client:
         return jsonify({'error': 'Client not found'}), 404
     
     server_config = load_server_config()
-    
     vless_link = create_vless_link(client, server_config)
     
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr = qrcode.QRCode(version=1, box_size=10, border=4)
     qr.add_data(vless_link)
     qr.make(fit=True)
     
-    img = qr.make_image(fill_color="black", back_color="white")
+    img = qr.make_image(fill_color="#a855f7", back_color="#0a0a0a")
     
     buf = BytesIO()
     img.save(buf, format='PNG')
@@ -228,7 +250,21 @@ def get_qrcode(client_id):
     
     return send_file(buf, mimetype='image/png')
 
+@app.route('/api/vless/<sub_code>')
+def get_vless_link(sub_code):
+    """Получить готовую VLESS ссылку"""
+    client = get_client_by_code(sub_code)
+    
+    if not client:
+        return jsonify({'error': 'Client not found'}), 404
+    
+    server_config = load_server_config()
+    vless_link = create_vless_link(client, server_config)
+    
+    return vless_link, 200, {'Content-Type': 'text/plain'}
+
 @app.route('/api/config/generate', methods=['POST'])
+@login_required
 def generate_config():
     """Генерация конфигурации сервера"""
     private_key, public_key = generate_keys()
@@ -243,11 +279,13 @@ def generate_config():
     return jsonify(config)
 
 @app.route('/api/masquerade-sites')
+@login_required
 def get_masquerade_sites():
     """Получить список сайтов для маскировки"""
     return jsonify(MASQUERADE_SITES)
 
 @app.route('/api/server/setup', methods=['POST'])
+@login_required
 def setup_server():
     """Автоматическая настройка сервера через SSH"""
     data = request.json
@@ -258,12 +296,10 @@ def setup_server():
     masquerade = data.get('masquerade', 'io.ozone.ru')
     
     try:
-        # Подключение к серверу
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         ssh.connect(ip, port=port, username=user, password=password, timeout=30)
         
-        # Установка Xray
         commands = [
             'apt update -y',
             'apt install -y curl wget',
@@ -274,7 +310,6 @@ def setup_server():
             stdin, stdout, stderr = ssh.exec_command(cmd, timeout=300)
             stdout.channel.recv_exit_status()
         
-        # Генерация ключей на сервере
         stdin, stdout, stderr = ssh.exec_command('xray x25519')
         keys_output = stdout.read().decode()
         
@@ -286,11 +321,9 @@ def setup_server():
             elif 'Public key' in line:
                 public_key = line.split(': ')[1].strip()
         
-        # Генерация shortId
         stdin, stdout, stderr = ssh.exec_command('openssl rand -hex 8')
         short_id = stdout.read().decode().strip()
         
-        # Создание конфигурации Xray с выбранной маскировкой
         xray_config = {
             "log": {"loglevel": "warning"},
             "inbounds": [{
@@ -317,18 +350,12 @@ def setup_server():
             }]
         }
         
-        # Сохранение конфигурации на сервере
         config_json = json.dumps(xray_config, indent=2)
         ssh.exec_command(f"echo '{config_json}' > /usr/local/etc/xray/config.json")
-        
-        # Открытие порта 443
         ssh.exec_command('ufw allow 443/tcp 2>/dev/null || true')
-        
-        # Запуск Xray
         ssh.exec_command('systemctl enable xray')
         ssh.exec_command('systemctl restart xray')
         
-        # Сохранение конфигурации локально
         server_config = {
             'address': ip,
             'port': 443,

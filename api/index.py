@@ -8,16 +8,17 @@ import qrcode
 from io import BytesIO
 import os
 from datetime import datetime
+import secrets
+import string
 import urllib.parse
 
 app = Flask(__name__, template_folder='../templates')
 app.secret_key = os.environ.get('SECRET_KEY', 'stepan-vpn-secret-key-2024')
 CORS(app)
 
-# Пароль для админки
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'Artem1522@')
+HAPP_ICON_URL = "https://i.imgur.com/7QjKsCY.png"
 
-# Для Vercel используем /tmp для хранения данных
 CONFIG_FILE = '/tmp/server_config.json'
 CLIENTS_FILE = '/tmp/clients.json'
 
@@ -28,6 +29,10 @@ def login_required(f):
             return redirect(url_for('login'))
         return f(*args, **kwargs)
     return decorated_function
+
+def generate_sub_code(length=7):
+    chars = string.ascii_letters + string.digits
+    return ''.join(secrets.choice(chars) for _ in range(length))
 
 MASQUERADE_SITES = [
     {'name': 'Tele2', 'domain': 'msk.t2.ru'},
@@ -63,6 +68,10 @@ def save_clients(clients):
     with open(CLIENTS_FILE, 'w', encoding='utf-8') as f:
         json.dump(clients, f, indent=2, ensure_ascii=False)
 
+def get_client_by_code(sub_code):
+    clients = load_clients()
+    return next((c for c in clients if c.get('sub_code') == sub_code), None)
+
 def create_vless_link(client, server_config):
     address = server_config['address']
     port = server_config['port']
@@ -81,9 +90,8 @@ def create_vless_link(client, server_config):
     
     param_str = '&'.join([f"{k}={v}" for k, v in params.items()])
     
-    # Название с информацией о подписке
-    traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "Unlimited"
-    name = f"STEPAN VPN | {client['name']} | {traffic_info}"
+    traffic_info = f"{client['traffic_limit']}GB" if client['traffic_limit'] > 0 else "∞"
+    name = f"⚡ STEPAN VPN | {client['name']} | {traffic_info}"
     name_encoded = urllib.parse.quote(name)
     
     vless_link = f"vless://{uuid_str}@{address}:{port}?{param_str}#{name_encoded}"
@@ -109,16 +117,20 @@ def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
 
-@app.route('/subscription/<int:client_id>')
-def subscription_page(client_id):
-    clients = load_clients()
-    client = next((c for c in clients if c['id'] == client_id), None)
+@app.route('/s/<sub_code>')
+def subscription_page(sub_code):
+    client = get_client_by_code(sub_code)
     
     if not client:
-        return "Клиент не найден", 404
+        return "Подписка не найдена", 404
     
-    subscription_url = f"{request.host_url}api/subscription/{client_id}"
-    return render_template('subscription.html', client=client, subscription_url=subscription_url)
+    server_config = load_server_config()
+    vless_link = create_vless_link(client, server_config)
+    
+    return render_template('subscription.html', 
+                         client=client, 
+                         vless_link=vless_link,
+                         sub_code=sub_code)
 
 @app.route('/api/clients', methods=['GET'])
 @login_required
@@ -132,10 +144,16 @@ def add_client():
     data = request.json
     clients = load_clients()
     
+    while True:
+        sub_code = generate_sub_code()
+        if not any(c.get('sub_code') == sub_code for c in clients):
+            break
+    
     new_id = max([c['id'] for c in clients], default=0) + 1
     
     new_client = {
         'id': new_id,
+        'sub_code': sub_code,
         'uuid': str(uuid.uuid4()),
         'name': data.get('name', f'Client {new_id}'),
         'email': data.get('email', ''),
@@ -169,10 +187,9 @@ def toggle_client(client_id):
     save_clients(clients)
     return jsonify({'success': True})
 
-@app.route('/api/subscription/<int:client_id>')
-def get_subscription(client_id):
-    clients = load_clients()
-    client = next((c for c in clients if c['id'] == client_id), None)
+@app.route('/api/sub/<sub_code>')
+def get_subscription(sub_code):
+    client = get_client_by_code(sub_code)
     
     if not client:
         return jsonify({'error': 'Client not found'}), 404
@@ -183,10 +200,9 @@ def get_subscription(client_id):
     
     return subscription, 200, {'Content-Type': 'text/plain'}
 
-@app.route('/api/qrcode/<int:client_id>')
-def get_qrcode(client_id):
-    clients = load_clients()
-    client = next((c for c in clients if c['id'] == client_id), None)
+@app.route('/api/qr/<sub_code>')
+def get_qrcode(sub_code):
+    client = get_client_by_code(sub_code)
     
     if not client:
         return jsonify({'error': 'Client not found'}), 404
@@ -198,13 +214,25 @@ def get_qrcode(client_id):
     qr.add_data(vless_link)
     qr.make(fit=True)
     
-    img = qr.make_image(fill_color="#a855f7", back_color="#09090b")
+    img = qr.make_image(fill_color="#a855f7", back_color="#0a0a0a")
     
     buf = BytesIO()
     img.save(buf, format='PNG')
     buf.seek(0)
     
     return send_file(buf, mimetype='image/png')
+
+@app.route('/api/vless/<sub_code>')
+def get_vless_link(sub_code):
+    client = get_client_by_code(sub_code)
+    
+    if not client:
+        return jsonify({'error': 'Client not found'}), 404
+    
+    server_config = load_server_config()
+    vless_link = create_vless_link(client, server_config)
+    
+    return vless_link, 200, {'Content-Type': 'text/plain'}
 
 @app.route('/api/masquerade-sites')
 @login_required
@@ -230,5 +258,4 @@ def update_server_config():
     save_server_config(config)
     return jsonify({'success': True})
 
-# Для Vercel
 app = app

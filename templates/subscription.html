@@ -25,32 +25,28 @@
         
         .container{max-width:480px;margin:0 auto;padding:16px 14px 30px;padding-top:max(16px, env(safe-area-inset-top));position:relative;z-index:1}
 
-        /* HEADER */
         .header{text-align:center;padding:28px 0 22px}
         .logo-wrap{position:relative;display:inline-block;margin-bottom:12px}
         .ring{position:absolute;inset:-12px;border:2px solid var(--primary);border-radius:50%;opacity:0;animation:ring 3s ease-out infinite}
         .ring:nth-child(2){animation-delay:1s}.ring:nth-child(3){animation-delay:2s}
         @keyframes ring{0%{transform:scale(0.8);opacity:0.6}100%{transform:scale(1.4);opacity:0}}
         .logo{position:relative;width:68px;height:68px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:34px;box-shadow:0 0 50px rgba(168,85,247,0.5)}
-        .title{font-size:2.2em;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#fff,#c084fc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .title{font-size:2.2em;font-weight:900;letter-spacing:-1px;background:linear-gradient(135deg,#fff,#c084fc);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
         .badge{display:inline-flex;align-items:center;gap:7px;background:var(--card);border:1px solid var(--border);padding:9px 18px;border-radius:50px;font-weight:600;font-size:0.9em;margin-top:10px}
         .badge-dot{width:8px;height:8px;background:var(--success);border-radius:50%;box-shadow:0 0 8px var(--success);animation:blink 2s infinite}
         .badge-dot.off{background:#ef4444;box-shadow:0 0 8px #ef4444}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0.5}}
 
-        /* CARDS */
         .card{background:var(--card);backdrop-filter:blur(20px);border:1px solid var(--border);border-radius:20px;padding:22px 18px;margin-bottom:14px}
         .card-head{display:flex;align-items:center;gap:11px;margin-bottom:16px}
         .card-ico{width:40px;height:40px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 6px 20px rgba(168,85,247,0.3)}
         .card-title{font-size:1.1em;font-weight:700}
 
-        /* STATS */
         .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
         .stat{background:rgba(168,85,247,0.06);border:1px solid var(--border);border-radius:14px;padding:14px 10px;text-align:center}
-        .stat-val{font-size:1.5em;font-weight:800;background:linear-gradient(135deg,#fff,var(--secondary));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .stat-val{font-size:1.5em;font-weight:800;background:linear-gradient(135deg,#fff,var(--secondary));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
         .stat-label{font-size:0.65em;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:3px}
 
-        /* APP SECTION */
         .app-section{background:linear-gradient(135deg,rgba(168,85,247,0.12),rgba(6,182,212,0.08));border:1px solid var(--border);border-radius:18px;padding:18px;text-align:center;margin-bottom:14px}
         .device-badge{display:inline-flex;align-items:center;gap:6px;background:var(--success);padding:8px 14px;border-radius:10px;font-size:0.8em;font-weight:700;margin-bottom:12px}
         .app-title{font-size:1.05em;font-weight:700;margin-bottom:4px}
@@ -62,7 +58,6 @@
         .app-btn-text{text-align:left;line-height:1.2}
         .app-btn-small{font-size:0.6em;opacity:0.7;display:block}
 
-        /* CONNECT */
         .connect{background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:20px;padding:24px 18px;text-align:center;margin-bottom:14px;position:relative;overflow:hidden;box-shadow:0 0 50px rgba(168,85,247,0.4)}
         .connect::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,0.1),transparent);pointer-events:none}
         .connect-title{font-size:1.2em;font-weight:800;margin-bottom:6px}
@@ -75,25 +70,21 @@
         .btn-copy{width:100%;padding:12px;background:rgba(255,255,255,0.15);border:1px solid rgba(255,255,255,0.2);border-radius:10px;color:#fff;font-weight:700;font-family:inherit;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;justify-content:center;gap:6px}
         .btn-copy:hover{background:rgba(255,255,255,0.25)}
 
-        /* QR */
         .qr-box{text-align:center;padding:20px;background:rgba(168,85,247,0.04);border-radius:16px}
         .qr-box img{width:160px;height:160px;border-radius:14px;border:3px solid var(--primary);box-shadow:0 0 40px rgba(168,85,247,0.4)}
         .qr-hint{font-size:0.8em;color:var(--muted);margin-top:12px}
 
-        /* FEATURES */
         .features{list-style:none}
         .features li{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);font-size:0.9em}
         .features li:last-child{border-bottom:none}
         .check{width:26px;height:26px;background:linear-gradient(135deg,var(--success),#16a34a);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0}
 
-        /* TG */
         .tg{background:linear-gradient(135deg,#0088cc,#00aaff);border-radius:16px;padding:20px;text-align:center}
         .tg h3{font-size:1.05em;margin-bottom:6px}
         .tg p{font-size:0.85em;opacity:0.9;margin-bottom:12px}
         .tg-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:12px 22px;border-radius:12px;font-weight:700;transition:all 0.3s}
         .tg-btn:hover{background:rgba(255,255,255,0.3);transform:scale(1.05)}
 
-        /* TOAST - FIXED */
         .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:var(--success);color:#fff;padding:14px 24px;border-radius:12px;font-weight:700;box-shadow:0 10px 30px rgba(34,197,94,0.4);transition:transform 0.4s cubic-bezier(0.4,0,0.2,1);z-index:1000;display:flex;align-items:center;gap:8px;opacity:0;pointer-events:none}
         .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 
@@ -120,7 +111,7 @@
         </div>
 
         <div class="app-section" id="appSection">
-            <div class="device-badge" id="deviceBadge">📱 Определяем...</div>
+            <div class="device-badge" id="deviceBadge">� Опрdеделяем...</div>
             <div class="app-title">Скачайте HAPP</div>
             <div class="app-sub">Приложение для VPN</div>
             <div class="app-btns" id="appBtns">
@@ -138,10 +129,10 @@
         <div class="connect">
             <div class="connect-title">🚀 Подключиться</div>
             <div class="connect-sub">Нажмите для добавления в HAPP</div>
-            <a href="happ://add?url={{ subscription_url }}" class="btn-connect" id="connectBtn">⚡ Подключить VPN</a>
+            <a href="happ://add?url={{ vless_link }}" class="btn-connect" id="connectBtn">⚡ Подключить VPN</a>
             <div class="copy-box">
-                <div class="copy-label">Или скопируйте ссылку</div>
-                <input type="text" class="copy-input" id="subLink" value="{{ subscription_url }}" readonly>
+                <div class="copy-label">Или скопируйте VLESS ссылку</div>
+                <input type="text" class="copy-input" id="vlessLink" value="{{ vless_link }}" readonly>
                 <button class="btn-copy" onclick="copyLink()">📋 Копировать</button>
             </div>
         </div>
@@ -149,8 +140,8 @@
         <div class="card">
             <div class="card-head"><div class="card-ico">📷</div><h2 class="card-title">QR код</h2></div>
             <div class="qr-box">
-                <img src="/api/qrcode/{{ client.id }}" alt="QR" loading="lazy">
-                <p class="qr-hint">Отсканируйте в HAPP</p>
+                <img src="/api/qr/{{ sub_code }}" alt="QR" loading="lazy">
+                <p class="qr-hint">Отсканируйте в HAPP — сразу подключит!</p>
             </div>
         </div>
 
@@ -195,7 +186,7 @@
         else{badge.innerHTML='🌐 Браузер';badge.style.background='#6366f1'}
 
         function copyLink(){
-            const input=document.getElementById('subLink');
+            const input=document.getElementById('vlessLink');
             input.select();input.setSelectionRange(0,99999);
             navigator.clipboard.writeText(input.value).then(()=>showToast()).catch(()=>{document.execCommand('copy');showToast()})
         }
